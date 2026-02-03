@@ -1,0 +1,512 @@
+@startuml MCP_Original
+
+' JSON-RPC Core Types
+interface JSONRPCMessage {
+}
+
+interface JSONRPCRequest {
+  +jsonrpc: string
+  +id: RequestId
+  +method: string
+  +params?: object
+}
+
+interface JSONRPCNotification {
+  +jsonrpc: string
+  +method: string
+  +params?: object
+}
+
+interface JSONRPCResponse {
+  +jsonrpc: string
+  +id: RequestId
+  +result: Result
+}
+
+interface JSONRPCError {
+  +jsonrpc: string
+  +id: RequestId
+  +error: ErrorObject
+}
+
+class ErrorObject {
+  +code: number
+  +message: string
+  +data?: unknown
+}
+
+JSONRPCMessage <|-- JSONRPCRequest
+JSONRPCMessage <|-- JSONRPCNotification
+JSONRPCMessage <|-- JSONRPCResponse
+JSONRPCMessage <|-- JSONRPCError
+JSONRPCError *-- ErrorObject
+
+' Base Types
+interface BaseMetadata {
+  +name: string
+  +title?: string
+}
+
+interface Result {
+  +_meta?: object
+}
+
+interface Request {
+  +method: string
+  +params?: object
+}
+
+interface Notification {
+  +method: string
+  +params?: object
+}
+
+' Initialization
+interface InitializeRequest {
+  +method: "initialize"
+  +protocolVersion: string
+  +capabilities: ClientCapabilities
+  +clientInfo: Implementation
+}
+
+interface InitializeResult {
+  +protocolVersion: string
+  +capabilities: ServerCapabilities
+  +serverInfo: Implementation
+  +instructions?: string
+}
+
+interface InitializedNotification {
+  +method: "notifications/initialized"
+}
+
+class ClientCapabilities {
+  +experimental?: object
+  +roots?: RootsCapability
+  +sampling?: object
+  +elicitation?: object
+}
+
+class ServerCapabilities {
+  +experimental?: object
+  +logging?: object
+  +completions?: object
+  +prompts?: PromptsCapability
+  +resources?: ResourcesCapability
+  +tools?: ToolsCapability
+}
+
+class Implementation {
+  +name: string
+  +title?: string
+  +version: string
+}
+
+Request <|-- InitializeRequest
+Result <|-- InitializeResult
+Notification <|-- InitializedNotification
+InitializeRequest *-- ClientCapabilities
+InitializeRequest *-- Implementation
+InitializeResult *-- ServerCapabilities
+InitializeResult *-- Implementation
+BaseMetadata <|-- Implementation
+
+' Resources
+interface ListResourcesRequest {
+  +method: "resources/list"
+  +cursor?: Cursor
+}
+
+interface ListResourcesResult {
+  +resources: Resource[]
+  +nextCursor?: Cursor
+}
+
+interface ReadResourceRequest {
+  +method: "resources/read"
+  +uri: string
+}
+
+interface ReadResourceResult {
+  +contents: ResourceContents[]
+}
+
+interface Resource {
+  +name: string
+  +title?: string
+  +uri: string
+  +description?: string
+  +mimeType?: string
+  +annotations?: Annotations
+  +size?: number
+  +_meta?: object
+}
+
+interface ResourceTemplate {
+  +name: string
+  +title?: string
+  +uriTemplate: string
+  +description?: string
+  +mimeType?: string
+  +annotations?: Annotations
+  +_meta?: object
+}
+
+interface ResourceContents {
+  +uri: string
+  +mimeType?: string
+  +_meta?: object
+}
+
+interface TextResourceContents {
+  +text: string
+}
+
+interface BlobResourceContents {
+  +blob: string
+}
+
+interface SubscribeRequest {
+  +method: "resources/subscribe"
+  +uri: string
+}
+
+interface UnsubscribeRequest {
+  +method: "resources/unsubscribe"
+  +uri: string
+}
+
+interface ResourceUpdatedNotification {
+  +method: "notifications/resources/updated"
+  +uri: string
+}
+
+interface ResourceListChangedNotification {
+  +method: "notifications/resources/list_changed"
+}
+
+Request <|-- ListResourcesRequest
+Result <|-- ListResourcesResult
+Request <|-- ReadResourceRequest
+Result <|-- ReadResourceResult
+Request <|-- SubscribeRequest
+Request <|-- UnsubscribeRequest
+Notification <|-- ResourceUpdatedNotification
+Notification <|-- ResourceListChangedNotification
+BaseMetadata <|-- Resource
+BaseMetadata <|-- ResourceTemplate
+ListResourcesResult *-- Resource
+ReadResourceResult *-- ResourceContents
+ResourceContents <|-- TextResourceContents
+ResourceContents <|-- BlobResourceContents
+
+' Prompts
+interface ListPromptsRequest {
+  +method: "prompts/list"
+  +cursor?: Cursor
+}
+
+interface ListPromptsResult {
+  +prompts: Prompt[]
+  +nextCursor?: Cursor
+}
+
+interface GetPromptRequest {
+  +method: "prompts/get"
+  +name: string
+  +arguments?: object
+}
+
+interface GetPromptResult {
+  +description?: string
+  +messages: PromptMessage[]
+}
+
+interface Prompt {
+  +name: string
+  +title?: string
+  +description?: string
+  +arguments?: PromptArgument[]
+  +_meta?: object
+}
+
+interface PromptArgument {
+  +name: string
+  +title?: string
+  +description?: string
+  +required?: boolean
+}
+
+interface PromptMessage {
+  +role: Role
+  +content: ContentBlock
+}
+
+interface PromptListChangedNotification {
+  +method: "notifications/prompts/list_changed"
+}
+
+Request <|-- ListPromptsRequest
+Result <|-- ListPromptsResult
+Request <|-- GetPromptRequest
+Result <|-- GetPromptResult
+Notification <|-- PromptListChangedNotification
+BaseMetadata <|-- Prompt
+BaseMetadata <|-- PromptArgument
+ListPromptsResult *-- Prompt
+Prompt *-- PromptArgument
+GetPromptResult *-- PromptMessage
+
+' Tools
+interface ListToolsRequest {
+  +method: "tools/list"
+  +cursor?: Cursor
+}
+
+interface ListToolsResult {
+  +tools: Tool[]
+  +nextCursor?: Cursor
+}
+
+interface CallToolRequest {
+  +method: "tools/call"
+  +name: string
+  +arguments?: object
+}
+
+interface CallToolResult {
+  +content: ContentBlock[]
+  +structuredContent?: object
+  +isError?: boolean
+}
+
+interface Tool {
+  +name: string
+  +title?: string
+  +description?: string
+  +inputSchema: JSONSchema
+  +outputSchema?: JSONSchema
+  +annotations?: ToolAnnotations
+  +_meta?: object
+}
+
+class ToolAnnotations {
+  +title?: string
+  +readOnlyHint?: boolean
+  +destructiveHint?: boolean
+  +idempotentHint?: boolean
+  +openWorldHint?: boolean
+}
+
+interface ToolListChangedNotification {
+  +method: "notifications/tools/list_changed"
+}
+
+Request <|-- ListToolsRequest
+Result <|-- ListToolsResult
+Request <|-- CallToolRequest
+Result <|-- CallToolResult
+Notification <|-- ToolListChangedNotification
+BaseMetadata <|-- Tool
+ListToolsResult *-- Tool
+Tool *-- ToolAnnotations
+CallToolResult *-- ContentBlock
+
+' Content Types
+interface ContentBlock {
+}
+
+interface TextContent {
+  +type: "text"
+  +text: string
+  +annotations?: Annotations
+  +_meta?: object
+}
+
+interface ImageContent {
+  +type: "image"
+  +data: string
+  +mimeType: string
+  +annotations?: Annotations
+  +_meta?: object
+}
+
+interface AudioContent {
+  +type: "audio"
+  +data: string
+  +mimeType: string
+  +annotations?: Annotations
+  +_meta?: object
+}
+
+interface ResourceLink {
+  +type: "resource_link"
+  +uri: string
+  +name: string
+  +title?: string
+}
+
+interface EmbeddedResource {
+  +type: "resource"
+  +resource: ResourceContents
+  +annotations?: Annotations
+  +_meta?: object
+}
+
+class Annotations {
+  +audience?: Role[]
+  +priority?: number
+  +lastModified?: string
+}
+
+ContentBlock <|-- TextContent
+ContentBlock <|-- ImageContent
+ContentBlock <|-- AudioContent
+ContentBlock <|-- ResourceLink
+ContentBlock <|-- EmbeddedResource
+Resource <|-- ResourceLink
+EmbeddedResource *-- ResourceContents
+
+' Sampling
+interface CreateMessageRequest {
+  +method: "sampling/createMessage"
+  +messages: SamplingMessage[]
+  +modelPreferences?: ModelPreferences
+  +systemPrompt?: string
+  +includeContext?: string
+  +temperature?: number
+  +maxTokens: number
+  +stopSequences?: string[]
+  +metadata?: object
+}
+
+interface CreateMessageResult {
+  +role: Role
+  +content: ContentBlock
+  +model: string
+  +stopReason?: string
+}
+
+interface SamplingMessage {
+  +role: Role
+  +content: ContentBlock
+}
+
+class ModelPreferences {
+  +hints?: ModelHint[]
+  +costPriority?: number
+  +speedPriority?: number
+  +intelligencePriority?: number
+}
+
+class ModelHint {
+  +name?: string
+}
+
+Request <|-- CreateMessageRequest
+Result <|-- CreateMessageResult
+CreateMessageRequest *-- SamplingMessage
+CreateMessageRequest *-- ModelPreferences
+ModelPreferences *-- ModelHint
+
+' Logging
+interface SetLevelRequest {
+  +method: "logging/setLevel"
+  +level: LoggingLevel
+}
+
+interface LoggingMessageNotification {
+  +method: "notifications/message"
+  +level: LoggingLevel
+  +logger?: string
+  +data: unknown
+}
+
+Request <|-- SetLevelRequest
+Notification <|-- LoggingMessageNotification
+
+' Completion
+interface CompleteRequest {
+  +method: "completion/complete"
+  +ref: Reference
+  +argument: ArgumentInfo
+  +context?: CompletionContext
+}
+
+interface CompleteResult {
+  +completion: CompletionInfo
+}
+
+class CompletionInfo {
+  +values: string[]
+  +total?: number
+  +hasMore?: boolean
+}
+
+Request <|-- CompleteRequest
+Result <|-- CompleteResult
+CompleteResult *-- CompletionInfo
+
+' Roots
+interface ListRootsRequest {
+  +method: "roots/list"
+}
+
+interface ListRootsResult {
+  +roots: Root[]
+}
+
+class Root {
+  +uri: string
+  +name?: string
+  +_meta?: object
+}
+
+interface RootsListChangedNotification {
+  +method: "notifications/roots/list_changed"
+}
+
+Request <|-- ListRootsRequest
+Result <|-- ListRootsResult
+Notification <|-- RootsListChangedNotification
+ListRootsResult *-- Root
+
+' Elicitation
+interface ElicitRequest {
+  +method: "elicitation/create"
+  +message: string
+  +requestedSchema: SchemaObject
+}
+
+interface ElicitResult {
+  +action: string
+  +content?: object
+}
+
+Request <|-- ElicitRequest
+Result <|-- ElicitResult
+
+' Progress & Cancellation
+interface ProgressNotification {
+  +method: "notifications/progress"
+  +progressToken: ProgressToken
+  +progress: number
+  +total?: number
+  +message?: string
+}
+
+interface CancelledNotification {
+  +method: "notifications/cancelled"
+  +requestId: RequestId
+  +reason?: string
+}
+
+interface PingRequest {
+  +method: "ping"
+}
+
+Notification <|-- ProgressNotification
+Notification <|-- CancelledNotification
+Request <|-- PingRequest
+
+@enduml

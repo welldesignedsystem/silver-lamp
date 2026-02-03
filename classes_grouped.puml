@@ -1,4 +1,4 @@
-@startuml MCP
+@startuml MCP_Grouped
 
 ' JSON-RPC Core Types
 rectangle "JSON-RPC Core" #FFE4B5 {
