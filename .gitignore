@@ -79,9 +79,7 @@ db.sqlite3-journal
 
 # PlantUML / diagram outputs
 *.png
-*.svg
 *.pdf
-*.puml.png
 
 # Misc
 .envrc
