@@ -1,4 +1,5 @@
-from mcp.server.fastmcp import FastMCP
+from fastmcp.dependencies import Depends
+from fastmcp import FastMCP
 from starlette.responses import PlainTextResponse
 
 mcp = FastMCP(
@@ -17,6 +18,18 @@ async def say_hi(name) -> str:
         name: The name of the user to greet, along with the hand emoji.
     """
     return f"Hello, {name}! 👋"
+
+@mcp.custom_route("/health", methods=["GET"])
+async def health_check(request) -> PlainTextResponse:
+    return PlainTextResponse("OK", status_code=200)
+
+def get_user_id() -> str:
+    return "user_123"  # Injected at runtime
+
+@mcp.tool
+def get_user_details(user_id: str = Depends(get_user_id)) -> str:
+    # user_id is injected by the server, not provided by the LLM
+    return f"Details for {user_id}"
 
 if __name__ == "__main__":
     mcp.run(transport="streamable-http")

@@ -1,10 +1,6 @@
-from mcp.server.fastmcp import FastMCP
-from starlette.responses import PlainTextResponse
+from fastmcp import FastMCP
 
-mcp = FastMCP(
-    name="RunningServerBasic",
-    instructions="This is a basic example of a running MCP server.",
-)
+mcp = FastMCP()
 
 @mcp.resource(uri="quote://{name}/say-hi", name="hi", description="say hi to the user.")
 async def say_hi(name) -> str:
@@ -15,10 +11,6 @@ async def say_hi(name) -> str:
         name: The name of the user to greet, along with the hand emoji.
     """
     return f"Hello, {name}! 👋"
-
-@mcp.custom_route("/health", methods=["GET"])
-async def health_check(request) -> PlainTextResponse:
-    return PlainTextResponse("OK", status_code=200)
 
 app = mcp.streamable_http_app()
 
