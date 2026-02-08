@@ -96,3 +96,11 @@ node_modules/
 
 # Ignore notebook checkpoints
 .ipynb_checkpoints/
+
+# Additional recommended ignores
+.mypy_cache/
+.pyre/
+.ropeproject/
+.python-version
+
+# Keep lockfiles (like uv.lock) committed by default - do NOT add *.lock here
