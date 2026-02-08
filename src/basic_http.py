@@ -18,10 +18,6 @@ async def say_hi(name) -> str:
     """
     return f"Hello, {name}! 👋"
 
-@mcp.custom_route("/health", methods=["GET"])
-async def health_check(request) -> PlainTextResponse:
-    return PlainTextResponse("OK", status_code=200)
-
 if __name__ == "__main__":
     mcp.run(transport="streamable-http")
 
