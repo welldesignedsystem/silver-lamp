@@ -77,10 +77,6 @@ db.sqlite3-journal
 *~
 *.swp
 
-# PlantUML / diagram outputs
-*.png
-*.pdf
-
 # Misc
 .envrc
 .secret
